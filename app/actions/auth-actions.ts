@@ -2,30 +2,34 @@
 
 import { signIn, signUp } from "@/lib/services/auth-service";
 import { signInSchema, signUpSchema } from "@/lib/validations/auth";
-import { z } from "zod";
 
-export async function signInAction(prevState: any, data: FormData) {
+export type AuthState = {
+  success: boolean;
+  error?: string;
+};
+
+export async function signInAction(prevState: AuthState, data: FormData): Promise<AuthState> {
   const formData = Object.fromEntries(data);
   const parsed = signInSchema.safeParse(formData);
 
   if (!parsed.success) {
     return {
       success: false,
-      error: z.prettifyError(parsed.error),
+      error: parsed.error.issues[0].message,
     };
   }
 
   return await signIn(parsed.data);
 }
 
-export async function signUpAction(prevState: any, data: FormData) {
+export async function signUpAction(prevState: AuthState, data: FormData): Promise<AuthState> {
   const formData = Object.fromEntries(data);
   const parsed = signUpSchema.safeParse(formData);
 
   if (!parsed.success) {
     return {
       success: false,
-      error: z.prettifyError(parsed.error),
+      error: parsed.error.issues[0].message,
     };
   }
 

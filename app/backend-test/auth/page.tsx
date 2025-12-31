@@ -1,15 +1,10 @@
 "use client";
 
 import { useActionState } from "react";
-import { signInAction, signUpAction } from "@/app/actions/auth-actions";
-
-type State = {
-  success: boolean;
-  error?: string;
-};
+import { signInAction, signUpAction, type AuthState } from "@/app/actions/auth-actions";
 
 function SignInForm() {
-  const [state, formAction] = useActionState<State, FormData>(signInAction, {
+  const [state, formAction] = useActionState<AuthState, FormData>(signInAction, {
     success: false,
   });
 
@@ -39,13 +34,13 @@ function SignInForm() {
       {state.success && (
         <p className="text-green-500">Signed in successfully!</p>
       )}
-      {state.error && <p className="text-red-500">{state.error[0]}</p>}
+      {state.error && <p className="text-red-500">{state.error}</p>}
     </div>
   );
 }
 
 function SignUpForm() {
-  const [state, formAction] = useActionState<State, FormData>(signUpAction, {
+  const [state, formAction] = useActionState<AuthState, FormData>(signUpAction, {
     success: false,
   });
 
@@ -81,7 +76,7 @@ function SignUpForm() {
       {state.success && (
         <p className="text-green-500">Signed up successfully!</p>
       )}
-      {state.error && <p className="text-red-500">{JSON.parse(state.error)}</p>}
+      {state.error && <p className="text-red-500">{state.error}</p>}
     </div>
   );
 }
