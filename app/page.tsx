@@ -1,65 +1,374 @@
+// app/page.tsx
 import Image from "next/image";
+import Link from "next/link";
 
-export default function Home() {
+const BRAND = "#0E4B5A";
+
+type Service = {
+  title: string;
+  desc: string;
+  price: string;
+};
+
+const services: Service[] = [
+  {
+    title: "Oral Prophylaxis",
+    desc: "Professional teeth cleaning to help remove plaque and tartar for a fresher, healthier smile.",
+    price: "₱ 1,000.00",
+  },
+  {
+    title: "Bone Grafting",
+    desc: "A restorative procedure that helps rebuild bone structure in preparation for implants.",
+    price: "₱ 4,500.00",
+  },
+  {
+    title: "Clear Retainer",
+    desc: "A transparent retainer designed to help maintain teeth alignment after orthodontic treatment.",
+    price: "₱ 2,000.00",
+  },
+];
+
+function ServiceCard({ title, desc, price }: Service) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="group rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+      <div className="h-40 w-full rounded-t-2xl bg-slate-50 flex items-center justify-center text-slate-400 text-xs">
+        Service Image
+      </div>
+      <div className="p-6">
+        <h3 className="text-base font-semibold text-slate-900">{title}</h3>
+        <p className="mt-2 text-sm leading-relaxed text-slate-600">{desc}</p>
+
+        <div className="mt-5 flex items-center justify-between">
+          <span className="text-sm font-semibold text-slate-900">{price}</span>
+          <Link
+            href="/services"
+            className="text-sm font-semibold text-sky-700 hover:text-sky-800"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            Learn more →
+          </Link>
         </div>
-      </main>
+      </div>
     </div>
+  );
+}
+
+function InfoPill({
+  title,
+  text,
+  align = "left",
+}: {
+  title: string;
+  text: string;
+  align?: "left" | "right";
+}) {
+  return (
+    <div className={`max-w-sm ${align === "right" ? "ml-auto" : ""}`}>
+      <p className="text-sm font-semibold text-slate-900">{title}</p>
+      <p className="mt-2 text-sm leading-relaxed text-slate-600">{text}</p>
+    </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <main className="bg-white">
+      {/* HERO */}
+      <section className="relative">
+        <div className="relative h-[420px] md:h-[520px] w-full">
+          <Image
+            src="/clinic1.jpg"
+            alt="Dental clinic"
+            fill
+            priority
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/35 to-black/10" />
+
+          <div className="absolute inset-0">
+            <div className="mx-auto flex h-full max-w-6xl items-center px-4">
+              <div className="max-w-2xl text-white">
+                <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold tracking-wide backdrop-blur">
+                  Gentle care • Modern clinic • Trusted team
+                </p>
+
+                <h1 className="mt-4 text-3xl font-extrabold leading-tight md:text-5xl">
+                  Professional Dental Care Solutions
+                </h1>
+
+                <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/90 md:text-base">
+                  Experience quality dental care tailored to your needs. From
+                  routine checkups to restorative services, we help you feel
+                  comfortable, confident, and cared for.
+                </p>
+
+                <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <Link
+                    href="/appointment"
+                    className="inline-flex w-fit items-center justify-center rounded-full px-6 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-95"
+                    style={{ backgroundColor: BRAND }}
+                  >
+                    Book an Appointment
+                  </Link>
+
+                  <Link
+                    href="/services"
+                    className="inline-flex w-fit items-center justify-center rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur hover:bg-white/15"
+                  >
+                    View Services
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* subtle bottom fade */}
+          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent" />
+        </div>
+      </section>
+
+      {/* WELCOME */}
+      <section className="py-14 md:py-20">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="grid grid-cols-1 items-center gap-10 md:grid-cols-2">
+            <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
+              <div className="relative h-[280px] w-full md:h-[360px]">
+                <Image
+                  src="/clinic6.jpg"
+                  alt="Welcome to J4 Dental Clinic"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold tracking-wide text-sky-700">
+                Welcome
+              </p>
+              <h2 className="mt-2 text-2xl font-bold text-slate-900 md:text-3xl">
+                Welcome to J4 Dental Clinic
+              </h2>
+              <p className="mt-4 text-sm leading-relaxed text-slate-600 md:text-base">
+                We provide trusted, affordable, and gentle dental care in a
+                clean, modern clinic. Whether it’s your first visit or a regular
+                check-up, our friendly team is here to make your experience safe
+                and comfortable.
+              </p>
+
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="/about"
+                  className="inline-flex w-fit items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-95"
+                  style={{ backgroundColor: BRAND }}
+                >
+                  Learn About Us
+                </Link>
+                <Link
+                  href="/contact"
+                  className="inline-flex w-fit items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                >
+                  Contact Us
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SERVICES */}
+      <section className="py-14 md:py-20 bg-slate-50/60">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="text-center">
+            <p className="text-sm font-semibold tracking-wide text-sky-700">
+              Services
+            </p>
+            <h2 className="mt-2 text-2xl font-bold text-slate-900 md:text-3xl">
+              Our Dental Services
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-600 md:text-base">
+              Quality dental care with transparent pricing and a comfortable
+              experience — designed for every smile.
+            </p>
+          </div>
+
+          <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-3">
+            {services.map((s) => (
+              <ServiceCard key={s.title} {...s} />
+            ))}
+          </div>
+
+          <div className="mt-10 text-center">
+            <Link
+              href="/services"
+              className="inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold text-white hover:opacity-95"
+              style={{ backgroundColor: BRAND }}
+            >
+              View All Services
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* FREE CONSULTATION BANNER */}
+      <section className="relative">
+        <div className="relative h-[360px] md:h-[320px] w-full">
+          <Image
+            src="/banner1.jpg"
+            alt="Free consultation banner"
+            fill
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-black/55" />
+
+          <div className="absolute inset-0">
+            <div className="mx-auto flex h-full max-w-6xl items-center px-4">
+              <div className="w-full">
+                <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
+                  <div className="max-w-xl text-white">
+                    <p className="text-sm font-semibold tracking-wide text-white/90">
+                      Limited Offer
+                    </p>
+                    <h3 className="mt-2 text-2xl font-extrabold md:text-3xl">
+                      Free Consultation
+                    </h3>
+                    <p className="mt-3 text-sm leading-relaxed text-white/85 md:text-base">
+                      Get expert guidance on the best dental care options for
+                      you. Message us to schedule your visit.
+                    </p>
+
+                    <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                      <Link
+                        href="/appointment"
+                        className="inline-flex w-fit items-center justify-center rounded-full px-6 py-3 text-sm font-semibold text-white hover:opacity-95"
+                        style={{ backgroundColor: BRAND }}
+                      >
+                        Book Now
+                      </Link>
+                      <Link
+                        href="/contact"
+                        className="inline-flex w-fit items-center justify-center rounded-full border border-white/25 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur hover:bg-white/15"
+                      >
+                        Contact Us
+                      </Link>
+                    </div>
+                  </div>
+
+                  <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2 md:max-w-xl md:grid-cols-2">
+                    <div className="rounded-2xl bg-white/10 p-5 backdrop-blur border border-white/15">
+                      <p className="text-sm font-semibold text-white">
+                        Included Services
+                      </p>
+                      <ul className="mt-3 space-y-2 text-sm text-white/85">
+                        <li>• Oral Prophylaxis</li>
+                        <li>• Tooth Restoration</li>
+                        <li>• Tooth Extraction</li>
+                        <li>• Fluoride</li>
+                      </ul>
+                    </div>
+
+                    <div className="rounded-2xl bg-white/10 p-5 backdrop-blur border border-white/15">
+                      <p className="text-sm font-semibold text-white">
+                        Also Available
+                      </p>
+                      <ul className="mt-3 space-y-2 text-sm text-white/85">
+                        <li>• Dentures</li>
+                        <li>• Veneers</li>
+                        <li>• Crowns</li>
+                        <li>• Root Canal Treatment</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="mt-6 text-xs text-white/70">
+                  *Terms and availability may vary. Please contact the clinic
+                  for details.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* WHY CHOOSE */}
+      <section className="py-14 md:py-20">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="text-center">
+            <p className="text-sm font-semibold tracking-wide text-sky-700">
+              Our Clinic
+            </p>
+            <h2 className="mt-2 text-2xl font-bold text-slate-900 md:text-3xl">
+              Why Choose J4 Dental Clinic
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-600 md:text-base">
+              A comfortable environment, transparent pricing, and a team that
+              prioritizes your safety and satisfaction.
+            </p>
+          </div>
+
+          <div className="mt-12 grid grid-cols-1 items-center gap-10 md:grid-cols-3">
+            <div className="space-y-8 text-center md:text-right">
+              <InfoPill
+                title="Trusted & Friendly Care"
+                text="We treat every patient with respect and care, helping you feel confident at every visit."
+                align="right"
+              />
+              <InfoPill
+                title="Clean & Comfortable Clinic"
+                text="We maintain a clean, modern environment with quality tools and comfortable treatment rooms."
+                align="right"
+              />
+            </div>
+
+            <div className="flex justify-center">
+              <div className="relative h-28 w-28 rounded-full bg-white shadow-sm ring-1 ring-slate-200">
+                <Image
+                  src="/dclogo.png"
+                  alt="J4 Dental Clinic logo"
+                  fill
+                  className="object-contain p-4"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-8 text-center md:text-left">
+              <InfoPill
+                title="Affordable & Transparent Pricing"
+                text="Clear pricing and honest recommendations — we help you choose what’s best for you."
+              />
+              <InfoPill
+                title="Skilled Dental Team"
+                text="Our team focuses on safe procedures and consistent results for long-term oral health."
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA STRIP */}
+      <section className="pb-16">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-slate-900">
+                  Ready to book your visit?
+                </p>
+                <p className="mt-1 text-sm text-slate-600">
+                  Schedule an appointment and let’s take care of your smile.
+                </p>
+              </div>
+              <Link
+                href="/appointment"
+                className="inline-flex w-fit items-center justify-center rounded-full px-6 py-3 text-sm font-semibold text-white hover:opacity-95"
+                style={{ backgroundColor: BRAND }}
+              >
+                Book an Appointment
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }
