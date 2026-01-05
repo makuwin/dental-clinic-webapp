@@ -4,90 +4,197 @@ import { useAuth } from "@/lib/hooks/useAuth";
 import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 import { createEmployeeAction } from "@/app/actions/admin-actions";
+import { 
+  updatePatientRecordAction, 
+  updateDentistProfileAction 
+} from "@/app/actions/auth-actions";
+import { 
+  bookAppointmentAction, 
+  getAvailabilityAction 
+} from "@/app/actions/appointment-actions";
+import { getPatientRecord } from "@/lib/services/patient-service";
+import { getDentistProfile } from "@/lib/services/dentist-service";
+import { getUserAppointments } from "@/lib/services/appointment-service";
+import { PatientRecord } from "@/lib/types/patient";
+import { DentistProfile } from "@/lib/types/dentist";
+import { Appointment } from "@/lib/types/appointment";
+
+function HistorySection() {
+  const { user } = useAuth();
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      getUserAppointments(user.uid).then((res) => {
+        if (res.success) setAppointments(res.data || []);
+        setLoading(false);
+      });
+    }
+  }, [user]);
+
+  if (loading) return <div>Loading history...</div>;
+
+  return (
+    <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+      <h3 className="text-lg font-bold text-gray-900">My Appointment History</h3>
+      {appointments.length === 0 ? (
+        <p className="text-sm text-gray-500 italic">No appointments booked yet.</p>
+      ) : (
+        <div className="space-y-3">
+          {appointments.map((app) => (
+            <div key={app.id} className="flex justify-between items-center p-3 border rounded bg-gray-50">
+              <div>
+                <p className="font-bold text-sm text-gray-800">{app.serviceType}</p>
+                <p className="text-xs text-gray-600">{app.date} @ {app.time}</p>
+              </div>
+              <span className={`text-xs font-bold px-2 py-1 rounded uppercase ${
+                app.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
+              }`}>
+                {app.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BookingSection() {
+  const { user } = useAuth();
+  const [state, formAction, isPending] = useActionState(bookAppointmentAction, { success: false });
+  const [availability, setAvailability] = useState<{takenSlots: string[], isHoliday: boolean, holidayReason?: string | null} | null>(null);
+  const [selectedDate, setSelectedDate] = useState("");
+
+  useEffect(() => {
+    if (selectedDate) {
+      getAvailabilityAction(selectedDate).then(setAvailability);
+    }
+  }, [selectedDate]);
+
+  return (
+    <div className="space-y-4 rounded-lg border border-blue-100 bg-blue-50 p-6">
+      <h3 className="text-lg font-bold text-blue-900">Book an Appointment</h3>
+      
+      <form action={formAction} className="space-y-3">
+        {/* Conditional Profile Info */}
+        {!user?.displayName && (
+          <input name="displayName" placeholder="Your Full Name" required className="w-full p-2 border rounded text-sm" />
+        )}
+        
+        <select name="serviceType" required className="w-full p-2 border rounded text-sm">
+          <option value="">Select Service</option>
+          <option value="General Checkup">General Checkup</option>
+          <option value="Cleaning">Cleaning</option>
+          <option value="Tooth Extraction">Tooth Extraction</option>
+          <option value="Emergency">Emergency Case</option>
+        </select>
+
+        <input 
+          name="date" 
+          type="date" 
+          required 
+          className="w-full p-2 border rounded text-sm" 
+          onChange={(e) => setSelectedDate(e.target.value)}
+        />
+
+        {availability?.isHoliday && (
+          <p className="text-xs font-bold text-red-600">Clinic is closed on this day: {availability.holidayReason}</p>
+        )}
+
+        <select name="time" required className="w-full p-2 border rounded text-sm" disabled={availability?.isHoliday}>
+          <option value="">Select Time</option>
+          {["08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00"].map(t => (
+            <option key={t} value={t} disabled={availability?.takenSlots.includes(t)}>
+              {t} {availability?.takenSlots.includes(t) ? "(Booked)" : ""}
+            </option>
+          ))}
+        </select>
+
+        <textarea name="notes" placeholder="Additional notes..." className="w-full p-2 border rounded text-sm h-20" />
+
+        <button disabled={isPending || availability?.isHoliday} className="w-full bg-blue-700 text-white py-2 rounded font-bold hover:bg-blue-800 disabled:opacity-50">
+          {isPending ? "Booking..." : "Submit Booking Request"}
+        </button>
+
+        {state.success && <p className="text-green-600 text-sm font-bold text-center">Appointment requested!</p>}
+        {state.error && <p className="text-red-600 text-sm font-bold text-center">{state.error}</p>}
+      </form>
+    </div>
+  );
+}
+
+// Reuse the previous sections but keep it tidy
+function PatientSection() {
+  const { user } = useAuth();
+  const [record, setRecord] = useState<PatientRecord | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [state, formAction, isPending] = useActionState(updatePatientRecordAction, { success: false });
+
+  useEffect(() => {
+    if (user) {
+      getPatientRecord(user.uid).then((res) => {
+        if (res.success) setRecord(res.data || null);
+        setLoading(false);
+      });
+    }
+  }, [user, state.success]);
+
+  if (loading) return <div>Loading record...</div>;
+
+  return (
+    <div className="space-y-4 rounded-lg border border-green-100 bg-green-50 p-6">
+      <h3 className="text-lg font-bold text-green-900">My Patient Record</h3>
+      {record && (
+        <div className="text-sm space-y-1 mb-4">
+          <p><strong>Phone:</strong> {record.phoneNumber}</p>
+          <p><strong>Status:</strong> {record.isProfileComplete ? "✅ Complete" : "⚠️ Incomplete"}</p>
+        </div>
+      )}
+      <form action={formAction} className="space-y-2">
+        <input name="phoneNumber" placeholder="Phone Number" className="w-full p-2 border rounded text-sm" defaultValue={record?.phoneNumber} />
+        <input name="dateOfBirth" type="date" className="w-full p-2 border rounded text-sm" defaultValue={record?.dateOfBirth} />
+        <select name="gender" className="w-full p-2 border rounded text-sm" defaultValue={record?.gender || "male"}>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other</option>
+        </select>
+        <input name="address" placeholder="Address" className="w-full p-2 border rounded text-sm" defaultValue={record?.address} />
+        <input name="emergencyContact" placeholder="Emergency Contact" className="w-full p-2 border rounded text-sm" defaultValue={record?.emergencyContact} />
+        <button disabled={isPending} className="w-full bg-green-700 text-white py-2 rounded font-bold hover:bg-green-800">
+          {isPending ? "Updating..." : "Update Clinical Record"}
+        </button>
+      </form>
+    </div>
+  );
+}
 
 function CreateEmployeeForm() {
   const { user } = useAuth();
   const [token, setToken] = useState("");
-  const [state, formAction, isPending] = useActionState(createEmployeeAction, {
-    success: false,
-  });
+  const [state, formAction, isPending] = useActionState(createEmployeeAction, { success: false });
 
-  useEffect(() => {
-    if (user) {
-      user.getIdToken().then(setToken);
-    }
-  }, [user]);
+  useEffect(() => { if (user) user.getIdToken().then(setToken); }, [user]);
 
   return (
     <div className="rounded-lg border border-indigo-100 bg-indigo-50 p-6">
-      <h3 className="mb-4 text-lg font-bold text-indigo-900">
-        Admin Panel: Add Employee
-      </h3>
+      <h3 className="mb-4 text-lg font-bold text-indigo-900">Admin: Add Employee</h3>
       <form action={formAction} className="space-y-3">
         <input type="hidden" name="idToken" value={token} />
-
-        <div>
-          <label className="block text-xs font-semibold uppercase text-indigo-800">
-            Full Name
-          </label>
-          <input
-            name="displayName"
-            required
-            className="w-full rounded border p-2 text-sm"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold uppercase text-indigo-800">
-            Email
-          </label>
-          <input
-            name="email"
-            type="email"
-            required
-            className="w-full rounded border p-2 text-sm"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold uppercase text-indigo-800">
-            Password
-          </label>
-          <input
-            name="password"
-            type="password"
-            required
-            className="w-full rounded border p-2 text-sm"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold uppercase text-indigo-800">
-            Role
-          </label>
-          <select name="role" className="w-full rounded border p-2 text-sm">
-            <option value="dentist">Dentist</option>
-            <option value="front-desk">Front Desk</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-
-        {state.success && (
-          <p className="text-sm font-medium text-green-600">
-            Employee created successfully!
-          </p>
-        )}
-        {state.error && (
-          <p className="text-sm font-medium text-red-600">{state.error}</p>
-        )}
-
-        <button
-          type="submit"
-          disabled={isPending}
-          className="mt-2 w-full rounded bg-indigo-700 py-2 text-sm font-bold text-white hover:bg-indigo-800 disabled:opacity-50"
-        >
+        <input name="displayName" placeholder="Name" className="w-full rounded border p-2 text-sm" />
+        <input name="email" type="email" placeholder="Email" className="w-full rounded border p-2 text-sm" />
+        <input name="password" type="password" placeholder="Password" className="w-full rounded border p-2 text-sm" />
+        <select name="role" className="w-full rounded border p-2 text-sm">
+          <option value="dentist">Dentist</option>
+          <option value="front-desk">Front Desk</option>
+          <option value="admin">Admin</option>
+        </select>
+        <button type="submit" disabled={isPending} className="w-full rounded bg-indigo-700 py-2 text-sm font-bold text-white hover:bg-indigo-800">
           {isPending ? "Creating..." : "Create Account"}
         </button>
+        {state.success && <p className="text-green-600 text-xs">Success!</p>}
+        {state.error && <p className="text-red-600 text-xs">{state.error}</p>}
       </form>
     </div>
   );
@@ -96,102 +203,36 @@ function CreateEmployeeForm() {
 export default function BackendTestPage() {
   const { user, role, loading, logout } = useAuth();
 
-  // Debugging Logs
-  useEffect(() => {
-    console.log("BackendTestPage - Auth State:", { user, role, loading });
-  }, [user, role, loading]);
-
-  if (loading) {
-    return (
-      <div className="text-center text-gray-500">Checking auth status...</div>
-    );
-  }
+  if (loading) return <div className="p-8 text-center">Loading...</div>;
 
   if (!user) {
     return (
-      <div className="flex flex-col items-center justify-center space-y-6 py-12">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900">Not Logged In</h2>
-          <p className="text-gray-500">
-            Please sign in to access the test dashboard.
-          </p>
-        </div>
+      <div className="flex flex-col items-center py-20 gap-4">
+        <h2 className="text-2xl font-bold">Backend Test Lab</h2>
         <div className="flex gap-4">
-          <Link
-            href="/backend-test/auth/signin"
-            className="rounded-lg bg-white px-6 py-3 font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-          >
-            Sign In
-          </Link>
-          <Link
-            href="/backend-test/auth/signup"
-            className="rounded-lg bg-indigo-600 px-6 py-3 font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-          >
-            Sign Up
-          </Link>
+          <Link href="/backend-test/auth/signin" className="px-6 py-2 bg-gray-200 rounded">Sign In</Link>
+          <Link href="/backend-test/auth/signup" className="px-6 py-2 bg-blue-600 text-white rounded">Sign Up</Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="grid gap-8 md:grid-cols-2">
-      {/* User Profile Section */}
-      <div>
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900">User Profile</h2>
-          <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
-            {role?.toUpperCase()}
-          </span>
+    <div className="max-w-6xl mx-auto p-6 space-y-8">
+      <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
+        <div>
+          <p className="text-sm text-gray-500">Logged in as</p>
+          <p className="font-bold">{user.email} ({role})</p>
         </div>
-
-        <div className="space-y-4 rounded-lg bg-gray-50 p-6">
-          <div>
-            <label className="block text-xs font-medium text-gray-500">
-              UID
-            </label>
-            <div className="font-mono text-sm">{user.uid}</div>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-500">
-              Display Name
-            </label>
-            <div className="font-medium">{user.displayName || "Not set"}</div>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-500">
-              Email
-            </label>
-            <div className="font-medium">{user.email}</div>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-500">
-              Email Verified
-            </label>
-            <div
-              className={
-                user.emailVerified ? "text-green-600" : "text-amber-600"
-              }
-            >
-              {user.emailVerified ? "Verified" : "Not Verified"}
-            </div>
-          </div>
-
-          <button
-            onClick={() => logout()}
-            className="mt-6 rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500"
-          >
-            Sign Out
-          </button>
-        </div>
+        <button onClick={logout} className="text-red-600 font-bold hover:underline text-sm">Sign Out</button>
       </div>
 
-      {/* Admin Section (Conditional) */}
-      {role === "admin" && (
-        <div>
-          <CreateEmployeeForm />
-        </div>
-      )}
+      <div className="grid gap-6 md:grid-cols-2">
+        <BookingSection />
+        <HistorySection />
+        <PatientSection />
+        {role === 'admin' && <CreateEmployeeForm />}
+      </div>
     </div>
   );
 }

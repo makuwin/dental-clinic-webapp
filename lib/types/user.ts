@@ -7,5 +7,6 @@ export interface UserProfile {
   email: string;
   role: UserRole;
   displayName?: string;
+  photoURL?: string;
   createdAt: Timestamp;
 }

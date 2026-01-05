@@ -7,10 +7,13 @@ import { Timestamp } from "firebase-admin/firestore";
 export async function verifyAdminToken(token: string): Promise<boolean> {
   try {
     const decodedToken = await adminAuth.verifyIdToken(token);
-    const userDoc = await adminDb.collection("users").doc(decodedToken.uid).get();
-    
+    const userDoc = await adminDb
+      .collection("users")
+      .doc(decodedToken.uid)
+      .get();
+
     if (!userDoc.exists) return false;
-    
+
     const userData = userDoc.data();
     return userData?.role === "admin";
   } catch (error) {
@@ -19,7 +22,9 @@ export async function verifyAdminToken(token: string): Promise<boolean> {
   }
 }
 
-export async function createEmployeeUser(data: z.infer<typeof createEmployeeSchema>) {
+export async function createEmployeeUser(
+  data: z.infer<typeof createEmployeeSchema>
+) {
   try {
     const { email, password, displayName, role } = data;
 
@@ -39,9 +44,22 @@ export async function createEmployeeUser(data: z.infer<typeof createEmployeeSche
       createdAt: Timestamp.now(),
     });
 
+    // 3. Initialize Dentist Profile (if applicable)
+    if (role === "dentist") {
+      await adminDb.collection("dentist_profiles").doc(userRecord.uid).set({
+        uid: userRecord.uid,
+        specialties: [],
+        schedule: {},
+        updatedAt: Timestamp.now(),
+      });
+    }
+
     return { success: true, uid: userRecord.uid };
   } catch (error: any) {
     console.error("Error creating employee:", error);
-    return { success: false, error: error.message || "Failed to create employee" };
+    return {
+      success: false,
+      error: error.message || "Failed to create employee",
+    };
   }
 }
