@@ -34,8 +34,19 @@ export async function bookAppointmentAction(
       success: false,
       error: "You must be logged in to book an appointment.",
     };
+  if (!auth.currentUser)
+    return {
+      success: false,
+      error: "You must be logged in to book an appointment.",
+    };
   const uid = auth.currentUser.uid;
 
+  return actionWrapper(
+    bookingSchema,
+    async (parsedData) => {
+      // 1. Validate Business Rules (Date/Time)
+      const dateError = validateAppointmentDate(parsedData.date);
+      if (dateError) throw new Error(dateError);
   return actionWrapper(
     bookingSchema,
     async (parsedData) => {
@@ -45,7 +56,19 @@ export async function bookAppointmentAction(
 
       const timeError = validateAppointmentTime(parsedData.time);
       if (timeError) throw new Error(timeError);
+      const timeError = validateAppointmentTime(parsedData.time);
+      if (timeError) throw new Error(timeError);
 
+      // 2. Conditional Profile Update
+      // If the form provided a name, update Auth Profile
+      if (
+        parsedData.displayName &&
+        parsedData.displayName !== auth.currentUser?.displayName
+      ) {
+        await updateUserProfile(auth.currentUser!, {
+          displayName: parsedData.displayName,
+        });
+      }
       // 2. Conditional Profile Update
       // If the form provided a name, update Auth Profile
       if (
@@ -72,6 +95,9 @@ export async function bookAppointmentAction(
       // 3. Create the Appointment
       const result = await createAppointment(uid, parsedData);
       if (!result.success) throw new Error(result.error);
+      // 3. Create the Appointment
+      const result = await createAppointment(uid, parsedData);
+      if (!result.success) throw new Error(result.error);
 
       return { success: true };
     },
@@ -83,8 +109,12 @@ export async function bookAppointmentAction(
 export async function getAvailabilityAction(
   date: string
 ): Promise<CalendarAvailability> {
+export async function getAvailabilityAction(
+  date: string
+): Promise<CalendarAvailability> {
   // 1. Get taken slots for this specific date
   const takenRes = await getTakenSlots(date);
+
 
   // 2. Check if it's a holiday (Simplified: just checking if the date exists in off_days)
   // Ideally, we'd fetch a range, but checking one date is fast.
@@ -96,9 +126,18 @@ export async function getAvailabilityAction(
     offDaysRes.data.length > 0
   );
 
+
+  const isHoliday = !!(
+    offDaysRes.success &&
+    offDaysRes.data &&
+    offDaysRes.data.length > 0
+  );
+
   return {
     takenSlots: takenRes.data || [],
     isHoliday,
+    holidayReason:
+      isHoliday && offDaysRes.data ? offDaysRes.data[0].reason : null,
     holidayReason:
       isHoliday && offDaysRes.data ? offDaysRes.data[0].reason : null,
   };

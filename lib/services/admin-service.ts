@@ -55,11 +55,12 @@ export async function createEmployeeUser(
     }
 
     return { success: true, uid: userRecord.uid };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error creating employee:", error);
+    const message = error instanceof Error ? error.message : "Failed to create employee";
     return {
       success: false,
-      error: error.message || "Failed to create employee",
+      error: message,
     };
   }
 }

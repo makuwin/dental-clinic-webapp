@@ -5,18 +5,16 @@ import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 import { createEmployeeAction } from "@/app/actions/admin-actions";
 import { 
-  updatePatientRecordAction, 
-  updateDentistProfileAction 
+  updatePatientRecordAction
 } from "@/app/actions/auth-actions";
-import { 
+import {
   bookAppointmentAction, 
-  getAvailabilityAction 
+  getAvailabilityAction,
+  CalendarAvailability
 } from "@/app/actions/appointment-actions";
 import { getPatientRecord } from "@/lib/services/patient-service";
-import { getDentistProfile } from "@/lib/services/dentist-service";
 import { getUserAppointments } from "@/lib/services/appointment-service";
 import { PatientRecord } from "@/lib/types/patient";
-import { DentistProfile } from "@/lib/types/dentist";
 import { Appointment } from "@/lib/types/appointment";
 
 function HistorySection() {
@@ -64,15 +62,14 @@ function HistorySection() {
 function BookingSection() {
   const { user } = useAuth();
   const [state, formAction, isPending] = useActionState(bookAppointmentAction, { success: false });
-  const [availability, setAvailability] = useState<{takenSlots: string[], isHoliday: boolean, holidayReason?: string | null} | null>(null);
+  const [availability, setAvailability] = useState<CalendarAvailability | null>(null);
   const [selectedDate, setSelectedDate] = useState("");
 
   useEffect(() => {
     if (selectedDate) {
-      getAvailabilityAction(selectedDate).then(setAvailability);
+      getAvailabilityAction(selectedDate).then((data) => setAvailability(data));
     }
   }, [selectedDate]);
-
   return (
     <div className="space-y-4 rounded-lg border border-blue-100 bg-blue-50 p-6">
       <h3 className="text-lg font-bold text-blue-900">Book an Appointment</h3>

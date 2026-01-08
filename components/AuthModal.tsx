@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { useActionState } from "react";
 import { signInAction, signUpAction } from "@/app/actions/auth-actions";
 
-type State = { success: boolean; error?: any };
+type State = { success: boolean; error?: unknown };
 
-function normalizeError(err: any) {
+function normalizeError(err: unknown) {
   if (!err) return "";
   if (Array.isArray(err)) return err.join(", ");
   if (typeof err === "string") {
@@ -149,8 +149,11 @@ export default function AuthModal({
   const [tab, setTab] = useState<"login" | "signup">(defaultTab);
 
   useEffect(() => {
-    if (open) setTab(defaultTab);
-  }, [open, defaultTab]);
+    if (open && tab !== defaultTab) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setTab(defaultTab);
+    }
+  }, [open, defaultTab, tab]);
 
   useEffect(() => {
     if (!open) return;

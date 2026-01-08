@@ -1,5 +1,3 @@
-import { Timestamp } from "firebase/firestore";
-
 // Global Clinic Holidays (e.g., Christmas, New Year)
 export interface ClinicOffDay {
   id: string;

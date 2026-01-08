@@ -14,6 +14,7 @@ export default function FooterGate() {
   const [mounted, setMounted] = useState(false);
   const path = usePathname() || "/";
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
 

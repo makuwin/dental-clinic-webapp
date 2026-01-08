@@ -5,6 +5,7 @@ import { getFirestore } from "firebase-admin/firestore";
 
 // Import the service account key directly
 // Note: Ensure this file is not committed to public version control
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const serviceAccount = require("../../.key/project-testing-6de5b-firebase-adminsdk-fbsvc-1f758dbf60.json");
 
 let app: App;
