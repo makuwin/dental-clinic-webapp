@@ -4,10 +4,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import AuthModal from "@/components/AuthModal";
+import { useAuth } from "@/lib/hooks/useAuth";
 
 const BRAND = "#0E4B5A";
 
 export default function SiteHeader() {
+  const { user, loading, logout } = useAuth();
+
   const [authOpen, setAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState<"login" | "signup">("login");
 
@@ -49,23 +52,42 @@ export default function SiteHeader() {
             </nav>
 
             <div className="flex items-center gap-3">
-              <Link
-                href="/appointment"
-                className="hidden rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-95 sm:inline-flex"
-                style={{ backgroundColor: BRAND }}
-              >
-                Book Appointment
-              </Link>
+              {/* Wait until auth is resolved to avoid flicker */}
+              {!loading && user && (
+                <>
+                  {/* Logged-in: "Book Appointment" to "Account" */}
+                  <Link
+                    href="/client-dashboard"
+                    className="hidden rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-95 sm:inline-flex"
+                    style={{ backgroundColor: BRAND }}
+                  >
+                    Account
+                  </Link>
 
-              <button
-                onClick={() => {
-                  setAuthTab("login");
-                  setAuthOpen(true);
-                }}
-                className="inline-flex rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
-              >
-                Log in
-              </button>
+                  {/* Logged-in: "Log in" to "Logout" */}
+                  <button
+                    onClick={logout}
+                    className="inline-flex rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
+                  >
+                    Logout
+                  </button>
+                </>
+              )}
+
+              {!loading && !user && (
+                <>
+                  {/* Logged-out hide booking button; show login */}
+                  <button
+                    onClick={() => {
+                      setAuthTab("login");
+                      setAuthOpen(true);
+                    }}
+                    className="inline-flex rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
+                  >
+                    Log in
+                  </button>
+                </>
+              )}
 
               <Link
                 href="/menu"
