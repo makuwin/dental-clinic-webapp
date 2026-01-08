@@ -6,9 +6,11 @@ import {
   where, 
   getDocs, 
   serverTimestamp, 
-  orderBy 
+  orderBy,
+  doc,
+  updateDoc
 } from "firebase/firestore";
-import { Appointment } from "../types/appointment";
+import { Appointment, AppointmentStatus } from "../types/appointment";
 import { ClinicOffDay } from "../types/calendar";
 import { bookingSchema } from "../validations/appointment";
 import { z } from "zod";
@@ -18,9 +20,6 @@ const OFF_DAYS_COLLECTION = "clinic_off_days";
 
 export async function createAppointment(uid: string, data: z.infer<typeof bookingSchema>) {
   try {
-    // Note: We don't save displayName/phoneNumber here. 
-    // Those are handled by the User Service profile update before this function is called.
-    
     await addDoc(collection(db, APPOINTMENTS_COLLECTION), {
       patientId: uid,
       serviceType: data.serviceType,
@@ -38,12 +37,23 @@ export async function createAppointment(uid: string, data: z.infer<typeof bookin
   }
 }
 
+export async function updateAppointmentStatus(appointmentId: string, status: AppointmentStatus) {
+  try {
+    const docRef = doc(db, APPOINTMENTS_COLLECTION, appointmentId);
+    await updateDoc(docRef, { status });
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating appointment status:", error);
+    return { success: false, error: "Failed to update status" };
+  }
+}
+
 export async function getTakenSlots(date: string) {
   try {
     const q = query(
       collection(db, APPOINTMENTS_COLLECTION),
       where("date", "==", date),
-      where("status", "in", ["pending", "confirmed"]) // Don't block for cancelled/completed? Maybe completed counts as taken.
+      where("status", "in", ["pending", "confirmed"])
     );
     
     const snap = await getDocs(q);
@@ -100,15 +110,12 @@ export async function getAllAppointments(date?: string) {
   try {
     let q;
     if (date) {
-      // Fetch for a specific day (Front-Desk "Daily View")
       q = query(
         collection(db, APPOINTMENTS_COLLECTION),
         where("date", "==", date),
         orderBy("time", "asc")
       );
     } else {
-      // Fetch all (sorted by most recent date first)
-      // Note: This query might require an index depending on data volume
       q = query(
         collection(db, APPOINTMENTS_COLLECTION),
         orderBy("date", "desc"),

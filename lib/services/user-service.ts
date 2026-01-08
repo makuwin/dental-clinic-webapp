@@ -1,5 +1,5 @@
 import { db } from "../firebase/firebase";
-import { doc, setDoc, getDoc, serverTimestamp, collection, query, where, getDocs, limit } from "firebase/firestore";
+import { doc, setDoc, getDoc, serverTimestamp, collection, query, where, getDocs, limit, updateDoc } from "firebase/firestore";
 import { UserProfile, UserRole } from "../types/user";
 
 export async function createUserDocument(uid: string, email: string, role: UserRole = "client") {
@@ -9,12 +9,24 @@ export async function createUserDocument(uid: string, email: string, role: UserR
       uid, // Still keeping this for convenience, though redundant with doc ID
       email,
       role,
+      displayName: "",
       createdAt: serverTimestamp(),
     });
     return { success: true };
   } catch (error) {
     console.error("Error creating user document:", error);
     return { success: false, error: "Failed to create user profile" };
+  }
+}
+
+export async function updateUserDocument(uid: string, data: Partial<UserProfile>) {
+  try {
+    const userRef = doc(db, "users", uid);
+    await updateDoc(userRef, data);
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating user document:", error);
+    return { success: false, error: "Failed to update user profile" };
   }
 }
 
@@ -58,15 +70,23 @@ export async function searchPatients(searchTerm?: string) {
 
 
 
-    // Firestore doesn't support 'OR' for partial strings on different fields natively.
+        // Firestore doesn't support 'OR' for partial strings on different fields natively.
 
-    // We run two queries in parallel.
 
-    const termLower = term.toLowerCase(); // Note: Firestore is case-sensitive, this assumes data is lowercased or we just search as is
+
+        // We run two queries in parallel.
+
+
+
+        
+
+
+
+        const emailQuery = query(
+
+
 
     
-
-    const emailQuery = query(
 
       usersRef,
 

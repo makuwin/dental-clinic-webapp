@@ -45,7 +45,7 @@ export const patientRecordSchema = z.object({
     conditions: z.array(z.string()).default([]),
     medications: z.string().nullable().optional(),
     notes: z.string().nullable().optional(),
-  }).optional().default({}),
+  }).optional().default({ allergies: [], conditions: [] }),
 });
 
 // --- Dentist/Employee Schemas ---

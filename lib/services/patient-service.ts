@@ -26,17 +26,14 @@ export async function updatePatientRecord(uid: string, data: z.input<typeof pati
     // 1. Validate data structure
     const validData = patientRecordSchema.parse(data);
 
-    let finalData: any = {
+    const finalData: Partial<PatientRecord> & { updatedAt: ReturnType<typeof serverTimestamp> } = {
       uid,
-      updatedAt: serverTimestamp(),
+      updatedAt: serverTimestamp() as any,
     };
 
     if (isStaff) {
       // Staff can update everything
-      finalData = {
-        ...finalData,
-        ...validData,
-      };
+      Object.assign(finalData, validData);
 
       // Check for clinical completeness
       finalData.isProfileComplete = !!(

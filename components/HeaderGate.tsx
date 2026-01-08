@@ -14,7 +14,7 @@ export default function HeaderGate() {
   const [mounted, setMounted] = useState(false);
   const path = usePathname() || '/';
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
 

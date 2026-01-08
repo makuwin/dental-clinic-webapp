@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useActionState } from "react";
 import { signInAction, signUpAction } from "@/app/actions/auth-actions";
 
-type State = { success: boolean; error?: unknown };
+type State = { success: boolean; error?: string };
 
 function normalizeError(err: unknown) {
   if (!err) return "";

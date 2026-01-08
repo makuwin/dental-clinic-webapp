@@ -2,10 +2,11 @@ import {
   signIn,
   signUp,
   performPasswordReset,
+  updateUserProfile,
 } from "@/lib/services/auth-service";
 import { updatePatientRecord } from "@/lib/services/patient-service";
 import { updateDentistProfile } from "@/lib/services/dentist-service";
-import { getUserProfile } from "@/lib/services/user-service";
+import { getUserProfile, updateUserDocument } from "@/lib/services/user-service";
 import {
   signInSchema,
   signUpSchema,
@@ -59,6 +60,18 @@ export async function updatePatientRecordAction(prevState: AuthState, data: Form
   const allergies = (rawData.allergies as string)?.split(",").map(s => s.trim()).filter(Boolean) || [];
   const conditions = (rawData.conditions as string)?.split(",").map(s => s.trim()).filter(Boolean) || [];
   
+  // Handle Display Name Update
+  if (rawData.displayName) {
+    const newName = rawData.displayName as string;
+    // 1. Update Firestore (Always)
+    await updateUserDocument(targetUid, { displayName: newName });
+    
+    // 2. Update Auth Profile (Only if editing self, because Client SDK cannot edit others)
+    if (!isStaff && auth.currentUser.uid === targetUid) {
+      await updateUserProfile(auth.currentUser, { displayName: newName });
+    }
+  }
+
   const structuredData = {
     ...rawData,
     medicalHistory: {

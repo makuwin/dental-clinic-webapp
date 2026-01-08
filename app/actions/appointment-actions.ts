@@ -4,17 +4,13 @@ import {
   validateAppointmentDate,
   validateAppointmentTime,
 } from "@/lib/validations/appointment";
-import {
-  createAppointment,
-  getTakenSlots,
-  getClinicOffDays,
-  getAllAppointments,
-} from "@/lib/services/appointment-service";
-import { updatePatientRecord } from "@/lib/services/patient-service";
+import { createAppointment, getTakenSlots, getClinicOffDays, getAllAppointments, updateAppointmentStatus } from "@/lib/services/appointment-service";
+import { updatePatientRecord, getPatientRecord } from "@/lib/services/patient-service";
 import { updateUserProfile } from "@/lib/services/auth-service";
 import { getUserProfile } from "@/lib/services/user-service";
 import { patientRecordSchema } from "@/lib/validations/auth";
 import { z } from "zod";
+import { AppointmentStatus, Appointment } from "@/lib/types/appointment";
 
 export type BookingState = ActionState;
 
@@ -101,21 +97,59 @@ export async function getAvailabilityAction(
   };
 }
 
+export interface AppointmentWithPatient extends Appointment {
+  patientName?: string;
+  isProfileComplete?: boolean;
+}
+
 // Staff Action: Fetch Clinic Schedule
-export async function getClinicScheduleAction(date?: string) {
+export async function getClinicScheduleAction(date?: string): Promise<{ success: boolean; data?: AppointmentWithPatient[]; error?: string }> {
   const { auth } = await import("@/lib/firebase/firebase");
   if (!auth.currentUser) return { success: false, error: "Not authenticated" };
 
   // Verify Role
   const profile = await getUserProfile(auth.currentUser.uid);
-  if (!profile.success || !profile.data)
-    return { success: false, error: "User profile not found" };
-
+  if (!profile.success || !profile.data) return { success: false, error: "User profile not found" };
+  
   const role = profile.data.role;
-  if (role === "client") {
+  if (role === 'client') {
     return { success: false, error: "Unauthorized: Staff access required" };
   }
 
-  // Fetch Data
-  return await getAllAppointments(date);
+  // Fetch Appointments
+  const result = await getAllAppointments(date);
+  if (!result.success || !result.data) return result;
+
+  // Enrich with Patient Names and Status
+  // We use Promise.all to fetch user profiles in parallel
+  const enrichedAppointments = await Promise.all(
+    result.data.map(async (app) => {
+      const [patientProfile, patientRecord] = await Promise.all([
+        getUserProfile(app.patientId),
+        getPatientRecord(app.patientId)
+      ]);
+      
+      return {
+        ...app,
+        patientName: patientProfile.data?.displayName || "Unknown",
+        isProfileComplete: patientRecord.data?.isProfileComplete || false
+      } as AppointmentWithPatient;
+    })
+  );
+
+  return { success: true, data: enrichedAppointments };
+}
+
+// Staff Action: Update Appointment Status
+export async function updateAppointmentStatusAction(appointmentId: string, status: AppointmentStatus) {
+  const { auth } = await import("@/lib/firebase/firebase");
+  if (!auth.currentUser) return { success: false, error: "Not authenticated" };
+
+  // Verify Role
+  const profile = await getUserProfile(auth.currentUser.uid);
+  if (!profile.success || !profile.data || profile.data.role === 'client') {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  return await updateAppointmentStatus(appointmentId, status);
 }
